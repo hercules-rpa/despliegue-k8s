@@ -23,3 +23,10 @@ helm update repo
 helm install rpa rpa-hercules/rpa-plataform -n rpa-hercules
 ```
 ````
+# Desisntalación
+
+````
+```
+helm uninstall rpa -n rpa-hercules
+```
+````
