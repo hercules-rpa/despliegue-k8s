@@ -12,4 +12,14 @@ En futuros despliegues dispondremos de:
 
 - CDN
 - Dashboard
-- 
+
+# Instalación
+
+
+````
+```
+helm repo add rpa-hercules https://raw.githubusercontent.com/hercules-rpa/despliegue-k8s/main
+helm update repo
+helm install rpa rpa-hercules/rpa-plataform -n rpa-hercules
+```
+````
