@@ -19,7 +19,7 @@ En futuros despliegues dispondremos de:
 ````
 ```
 helm repo add rpa-hercules https://raw.githubusercontent.com/hercules-rpa/despliegue-k8s/main
-helm update repo
+helm repo update
 helm install rpa rpa-hercules/rpa-plataform -n rpa-hercules
 ```
 ````
