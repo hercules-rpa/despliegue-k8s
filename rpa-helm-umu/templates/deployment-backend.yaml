@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator-rpa
+  labels:
+    app: orchestrator-rpa
+spec:
+  selector:
+    matchLabels:
+      app: orchestrator-rpa
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: orchestrator-rpa
+    spec:
+      containers:
+        - name: orchestrator-rpa
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/orchestratorK8s.json
+              subPath: orchestratorK8s.json
+              
+          env:
+          - name: GITHUB_ORCHESTRATOR
+            value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
+
+          command: ["/bin/bash"]
+          args: 
+            - -c
+            - |
+              cd /opt
+              pwd
+              ls -al
+              cat orchestratorK8s.json
+              apt-get update -y
+              apt-get install apt-transport-https ca-certificates wget dirmngr gnupg software-properties-common -y
+              apt-get install postgresql-client -y
+              pip3 install -U cqlsh
+              wget $(GITHUB_ORCHESTRATOR) && unzip main.zip && ls && rm -rf main.zip && cp orchestratorK8s.json orquestador-main/rpa_orchestrator/config &&  cd orquestador-main/
+              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/databaseAndTables.sql
+              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/inserts.sql
+              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/processDatabase.sql
+              cqlsh cassandra.rpa-hercules.svc.cluster.local -u {{ .Values.cassandra.user }} -p {{ .Values.cassandra.password }} -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
+              pip3 install -r requirements.txt
+              cat rpa_orchestrator/config/orchestratorK8s.json && python LaunchOrchestrator.py orchestratorK8s.json
+          ports:
+            - name: flask
+              containerPort: {{ .Values.backend.service.flask.port }}
+          imagePullPolicy: {{ .Values.backend.image.pullpolicy }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: backend-config
+            items: 
+            - key: orchestratorK8s.json
+              path: orchestratorK8s.json

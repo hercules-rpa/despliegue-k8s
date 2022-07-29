@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim
+  labels:
+    app: postgres
+spec:
+  storageClassName: {{ .Values.postgres.volumeClaim.storageClassName }}
+  accessModes:
+    - {{ .Values.postgres.volumeClaim.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.volumeClaim.capacity.storage }}

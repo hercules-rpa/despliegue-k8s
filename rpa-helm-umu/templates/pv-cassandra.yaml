@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: cassandra-pv-claim
+  labels:
+    app: cassandra
+spec:
+  storageClassName: {{ .Values.postgres.volumeClaim.storageClassName }}
+  accessModes:
+    - {{ .Values.postgres.volumeClaim.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.cassandra.volumeClaim.capacity.storage }}

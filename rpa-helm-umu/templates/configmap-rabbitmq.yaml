@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+data:
+  enabled_plugins: |
+    {{ .Values.rabbitmq.enabled_plugins }}
+  rabbitmq.conf: |
+    default_user = "{{ .Values.rabbitmq.user }}"
+    default_pass = "{{ .Values.rabbitmq.password }}"
+    loopback_users = none
+    loopback_users.guest = false
+    load_definitions = /etc/rabbitmq/definitions.json
+  definitions.json: |
+    {
+      "users": [
+        {
+          "name": "{{ .Values.rabbitmq.user }}",
+          "password": "{{ .Values.rabbitmq.password }}",
+          "tags": "administrator"
+        }
+       ],
+      "vhosts":[
+        {
+          "name":"/"
+        }
+      ],
+       "permissions": [
+         {
+           "user": "{{ .Values.rabbitmq.user }}",
+           "vhost": "/",
+           "configure": ".*",
+           "write": ".*",
+           "read": ".*"
+         }
+       ]
+ 
+     }

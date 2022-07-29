@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-rpa
+  labels:
+    app: postgres-rpa
+spec:
+  selector:
+    matchLabels:
+      app: postgres-rpa
+  serviceName: "postgres-rpa"
+  replicas: {{ .Values.postgres.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: postgres-rpa
+    spec:
+      containers:
+        - name: postgres-rpa
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullpolicy }}
+          env:
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: {{ .Values.postgres.service.tcp.port }}
+              name: postgres
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: config-pv
+      volumes:
+        - name: config-pv
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim

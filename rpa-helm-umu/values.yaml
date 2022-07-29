@@ -1,0 +1,85 @@
+# Default values for rpa-plataform.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+rabbitmq:
+  user: "admin"
+  password: "H3rcul3sRPA"
+  enabled_plugins: "[rabbitmq_management, rabbitmq_prometheus]."
+
+
+  replicaCount: 1
+
+  image:
+    repository: rabbitmq
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "3.8.27-management-alpine"
+
+  service:
+    type: LoadBalancer
+    http:
+      port: 15672
+    amqp:
+      port: 5672
+    dist:
+      port: 25672
+    
+postgres:
+  user: "postgres"
+  password: "H3rcul3sRPA"
+  
+  replicaCount: 1
+
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    tcp:
+      port: 5432
+
+  volumeClaim:
+    storageClassName: cephfs
+    accessModes: ReadWriteOnce
+    capacity:
+      storage: 10Gi
+    
+cassandra:
+  user: "cassandra"
+  password: "H3rcul3sRPA"
+
+  image:
+    repository: cassandra
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "4"
+
+  service:
+    type: ClusterIP
+    tcp:
+      port: 9042
+
+  volumeClaim:
+    storageClassName: cephfs
+    accessModes: ReadWriteOnce
+    capacity:
+      storage: 10Gi
+
+    
+backend:
+
+  image:
+    repository: python
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "3.8-bullseye"
+
+  service:
+    type: LoadBalancer
+    flask:
+      port: 5000

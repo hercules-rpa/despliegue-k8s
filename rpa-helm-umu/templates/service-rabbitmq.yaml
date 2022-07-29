@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  type: {{ .Values.rabbitmq.service.type }}
+  ports:
+   - name: http
+     protocol: TCP
+     port: {{ .Values.rabbitmq.service.http.port }}
+   - name: amqp
+     protocol: TCP
+     port: {{ .Values.rabbitmq.service.amqp.port }}
+   - name: dist
+     protocol: TCP
+     port: {{ .Values.rabbitmq.service.dist.port }}
+  selector:
+    app: rabbitmq
