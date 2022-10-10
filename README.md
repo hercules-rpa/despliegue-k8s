@@ -34,3 +34,8 @@ Un ejemplo de instalación modificando los storageClass e indicando que se desea
  helm install rpa rpa-plataform/rpa-plataform  --set cassandra.volumeClaim.storageClassName=openebs-hostpath --set postgres.volumeClaim.storageClassName=openebs-hostpath --set cdn.volumeClaim.storageClassName=openebs-hostpath  --set postgres.install=true -n rpa-hercules
 ```
 
+# Desisntalación
+
+```
+helm uninstall rpa -n rpa-hercules
+```
