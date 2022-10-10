@@ -3,12 +3,12 @@ entries:
   rpa-plataform:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-10T09:19:50.054152435Z"
+    created: "2022-10-10T09:52:40.926544552Z"
     description: A Helm chart for Kubernetes
-    digest: 96305ece6f3350d57a824801e1461caf26fbdaaf18b7b7e5509a7af26e45413c
+    digest: f7bd5be4d29887754005b3945596accbe9ad61c287add81655ad485674906feb
     name: rpa-plataform
     type: application
     urls:
     - rpa-plataform-0.1.0.tgz
     version: 0.1.0
-generated: "2022-10-10T09:19:50.051832976Z"
+generated: "2022-10-10T09:52:40.924262995Z"
