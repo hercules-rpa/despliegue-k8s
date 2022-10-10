@@ -25,13 +25,13 @@ helm update repo
 Para la correcta instalación se recomienda ver los valores que se desean modificar con el comando:
 
 ```
-helm show values rpa-plataform/rpa-plataform
+helm show values rpa-hercules/rpa-plataform
 ```
 
 Un ejemplo de instalación modificando los storageClass e indicando que se desea instalar postgres
 
 ```
- helm install rpa rpa-plataform/rpa-plataform  --set cassandra.volumeClaim.storageClassName=openebs-hostpath --set postgres.volumeClaim.storageClassName=openebs-hostpath --set cdn.volumeClaim.storageClassName=openebs-hostpath  --set postgres.install=true -n rpa-hercules
+ helm install rpa rpa-hercules/rpa-plataform  --set cassandra.volumeClaim.storageClassName=openebs-hostpath --set postgres.volumeClaim.storageClassName=openebs-hostpath --set cdn.volumeClaim.storageClassName=openebs-hostpath  --set postgres.install=true -n rpa-hercules
 ```
 
 # Desisntalación
