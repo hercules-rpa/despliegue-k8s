@@ -9,29 +9,60 @@ spec:
     matchLabels:
       app: cassandra-rpa
   serviceName: "cassandra-rpa"
-  replicas: 1
+  replicas: {{ .Values.cassandra.replicaCount }}
   template:
     metadata:
       labels:
         app: cassandra-rpa
     spec:
-      containers:
-        - name: cassandra-rpa
-          image: "{{ .Values.cassandra.image.repository }}:{{ .Values.cassandra.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: Always
-          env:
-            - name: CASSANDRA_CLUSTER_NAME
-              value: {{ .Values.cassandra.user }}
-            - name: CASSANDRA_PASSWORD
-              value: {{ .Values.cassandra.password }}
-          ports:
-            - containerPort: {{ .Values.cassandra.service.tcp.port }}
-              name: cassandra
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /var/lib/cassandra/data
-              name: config-pv
       volumes:
         - name: config-pv
           persistentVolumeClaim:
             claimName: cassandra-pv-claim
+      containers:
+        - name: cassandra-rpa
+          image: "{{ .Values.cassandra.image.repository }}:{{ .Values.cassandra.image.tag | default .Chart.AppVersion }}"
+          resources:
+            requests:
+              memory: {{ .Values.cassandra.resource.request.memory }}
+              cpu: "{{ .Values.cassandra.resource.request.cpu }}"
+            limits:
+              memory: {{ .Values.cassandra.resource.limit.memory }}
+              cpu: "{{ .Values.cassandra.resource.limit.cpu }}"
+          imagePullPolicy: {{ .Values.cassandra.image.pullpolicy }}
+          env:
+            - name: CASSANDRA_CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_cassandra
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - nodetool status
+            initialDelaySeconds: 15
+            timeoutSeconds: 120
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - nodetool status
+            initialDelaySeconds: 45
+            timeoutSeconds: 120
+          ports:
+            - containerPort: {{ .Values.cassandra.service.tcp.port }}
+              name: cassandra
+              protocol: TCP
+
+          volumeMounts:
+            - mountPath: /var/lib/cassandra/data
+              name: config-pv
+

@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: cdn-pv-claim
+  labels:
+    app: cdn
+spec:
+  storageClassName: {{ .Values.cdn.volumeClaim.storageClassName }}
+  accessModes:
+    - {{ .Values.cdn.volumeClaim.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.cdn.volumeClaim.capacity.storage }}

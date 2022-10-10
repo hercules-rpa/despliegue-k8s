@@ -14,18 +14,80 @@ spec:
       labels:
         app: orchestrator-rpa
     spec:
+      initContainers:
+        - name: wait-for-all-on
+          image: python:3.8-bullseye
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_postgres
+            - name: CASSANDRA_CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_cassandra
+          command: ["/bin/bash"]
+          args:
+          - -c
+          - |
+            apt-get update -y
+            apt-get install postgresql-client -y
+            apt-get install dnsutils -y
+            pip3 install -U cqlsh
+            until cqlsh {{ .Values.cassandra.address }} -u $(CASSANDRA_CLUSTER_NAME) -p $(CASSANDRA_PASSWORD); do echo waiting for cassandra; sleep 2; done
+            until PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER); do echo waiting for postgres; sleep 2; done
+            until nslookup {{ .Values.rabbitmq.address }}; do echo waiting for rabbitmq; sleep 2; done
+            until nslookup {{ .Values.cdn.address }}; do echo waiting for cdn; sleep 2; done
       containers:
         - name: orchestrator-rpa
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          resources:
+            requests:
+              memory: {{ .Values.backend.resource.request.memory }}
+              cpu: "{{ .Values.backend.resource.request.cpu }}"
+            limits:
+              memory: {{ .Values.backend.resource.limit.memory }}
+              cpu: "{{ .Values.backend.resource.limit.cpu }}"
           volumeMounts:
             - name: config-volume
               mountPath: /opt/orchestratorK8s.json
               subPath: orchestratorK8s.json
               
           env:
-          - name: GITHUB_ORCHESTRATOR
-            value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
-
+            - name: GITHUB_ORCHESTRATOR
+              value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_postgres
+            - name: CASSANDRA_CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_cassandra
           command: ["/bin/bash"]
           args: 
             - -c
@@ -39,10 +101,10 @@ spec:
               apt-get install postgresql-client -y
               pip3 install -U cqlsh
               wget $(GITHUB_ORCHESTRATOR) && unzip main.zip && ls && rm -rf main.zip && cp orchestratorK8s.json orquestador-main/rpa_orchestrator/config &&  cd orquestador-main/
-              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/databaseAndTables.sql
-              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/inserts.sql
-              PGPASSWORD={{ .Values.postgres.password }} psql -h postgres.rpa-hercules.svc.cluster.local -U {{ .Values.postgres.user }} -f rpa_orchestrator/config/bbdd/persistence/processDatabase.sql
-              cqlsh cassandra.rpa-hercules.svc.cluster.local -u {{ .Values.cassandra.user }} -p {{ .Values.cassandra.password }} -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
+              PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/databaseAndTables.sql
+              PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/inserts.sql
+              PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/processDatabase.sql
+              cqlsh {{ .Values.cassandra.address }} -u $(CASSANDRA_CLUSTER_NAME) -p $(CASSANDRA_PASSWORD) -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
               pip3 install -r requirements.txt
               cat rpa_orchestrator/config/orchestratorK8s.json && python LaunchOrchestrator.py orchestratorK8s.json
           ports:
@@ -51,8 +113,8 @@ spec:
           imagePullPolicy: {{ .Values.backend.image.pullpolicy }}
       volumes:
         - name: config-volume
-          configMap:
-            name: backend-config
+          secret:
+            secretName: secret-backend
             items: 
             - key: orchestratorK8s.json
               path: orchestratorK8s.json

@@ -25,9 +25,24 @@ spec:
       containers:
       - name: rabbitmq-k8s
         image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag | default .Chart.AppVersion }}"
+        resources:
+          requests:
+            memory: {{ .Values.rabbitmq.resource.request.memory }}
+            cpu: "{{ .Values.rabbitmq.resource.request.cpu }}"
+          limits:
+            memory: {{ .Values.rabbitmq.resource.limit.memory }}
+            cpu: "{{ .Values.rabbitmq.resource.limit.cpu }}"
         volumeMounts:
-          - name: config-volume
-            mountPath: /etc/rabbitmq
+          - name: definitions
+            mountPath: /etc/rabbitmq/definitions.json
+            subPath: definitions.json
+          - name: rabbitmq
+            mountPath: /etc/rabbitmq/rabbitmq.conf
+            subPath: rabbitmq.conf
+          - name: enabled-plugins
+            mountPath: /etc/rabbitmq/enabled_plugins
+            subPath: enabled_plugins
+
         # Learn more about what ports various protocols use
         # at https://www.rabbitmq.com/networking.html#ports
         ports:
@@ -42,12 +57,6 @@ spec:
             containerPort: {{ .Values.rabbitmq.service.dist.port }}
         livenessProbe:
           exec:
-            # This is just an example. There is no "one true health check" but rather
-            # several rabbitmq-diagnostics commands that can be combined to form increasingly comprehensive
-            # and intrusive health checks.
-            # Learn more at https://www.rabbitmq.com/monitoring.html#health-checks.
-            #
-            # Stage 2 check:
             command: ["rabbitmq-diagnostics", "status"]
           initialDelaySeconds: 60
           # See https://www.rabbitmq.com/monitoring.html for monitoring frequency recommendations.
@@ -55,12 +64,6 @@ spec:
           timeoutSeconds: 15
         readinessProbe:
           exec:
-            # This is just an example. There is no "one true health check" but rather
-            # several rabbitmq-diagnostics commands that can be combined to form increasingly comprehensive
-            # and intrusive health checks.
-            # Learn more at https://www.rabbitmq.com/monitoring.html#health-checks.
-            #
-            # Stage 1 check:
             command: ["rabbitmq-diagnostics", "ping"]
           initialDelaySeconds: 20
           periodSeconds: 60
@@ -84,15 +87,23 @@ spec:
           - name: RABBITMQ_NODENAME
             value: rabbit@$(RABBITMQ-HERCULES).$(K8S_SERVICE_NAME).$(NAMESPACE-HERCULES-RPA).svc.cluster.local
           - name: K8S_HOSTNAME_SUFFIX
-            value: .$(K8S_SERVICE_NAME).$(NAMESPACE-HERCULES-RPA).svc.cluster.local
+            value: {{ .Values.rabbitmq.address }}
       volumes:
-        - name: config-volume
-          configMap:
-            name: rabbitmq-config
+        - name: definitions
+          secret:
+            secretName: secret-rabbitmq
             items:
             - key: definitions.json
               path: definitions.json
+        - name: rabbitmq
+          secret:
+            secretName: secret-rabbitmq
+            items:
             - key: rabbitmq.conf
               path: rabbitmq.conf
+        - name: enabled-plugins
+          secret:
+            secretName: secret-rabbitmq
+            items:
             - key: enabled_plugins
               path: enabled_plugins

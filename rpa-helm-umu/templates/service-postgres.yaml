@@ -1,3 +1,4 @@
+{{- if .Values.postgres.install }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,3 +11,4 @@ spec:
     app: postgres-rpa
   ports: 
     - port: {{ .Values.postgres.service.tcp.port }}
+{{ end }}

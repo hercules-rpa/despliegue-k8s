@@ -1,11 +1,14 @@
 # Default values for rpa-plataform.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-
+ingress:
+  ingressClassName: "nginx"
 rabbitmq:
-  user: "admin"
-  password: "H3rcul3sRPA"
+  user: "YWRtaW4="
+  password: "SDNyY3VsM3NSUEE="
+  address : "rabbitmq.rpa-hercules.svc.cluster.local"
+  ingress_address: "rabbitmq.rpa.hercules.com"
+  ingress_address_managment: "rabbitmq.managment.rpa.hercules.com"
   enabled_plugins: "[rabbitmq_management, rabbitmq_prometheus]."
 
 
@@ -17,6 +20,14 @@ rabbitmq:
     # Overrides the image tag whose default is the chart appVersion.
     tag: "3.8.27-management-alpine"
 
+  resource:
+    request:
+      memory: "2Gi"
+      cpu: "500m"
+    limit:
+      memory: "2Gi"
+      cpu: "500m" 
+
   service:
     type: LoadBalancer
     http:
@@ -27,8 +38,10 @@ rabbitmq:
       port: 25672
     
 postgres:
-  user: "postgres"
-  password: "H3rcul3sRPA"
+  user: "cG9zdGdyZXM="
+  password: "SDNyY3VsM3NSUEE="
+  install: true
+  address: "postgres.rpa-hercules.svc.cluster.local"
   
   replicaCount: 1
 
@@ -36,7 +49,16 @@ postgres:
     repository: postgres
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "14-alpine"
+
+  resource:
+    request:
+      memory: "1Gi"
+      cpu: "500m"
+
+    limit:
+      memory: "1Gi"
+      cpu: "500m" 
 
   service:
     type: ClusterIP
@@ -47,17 +69,28 @@ postgres:
     storageClassName: cephfs
     accessModes: ReadWriteOnce
     capacity:
-      storage: 10Gi
+      storage: 5Gi
     
 cassandra:
-  user: "cassandra"
-  password: "H3rcul3sRPA"
+  user: "Y2Fzc2FuZHJh"
+  password: "SDNyY3VsM3NSUEE="
+  address : "cassandra.rpa-hercules.svc.cluster.local"
+  replicaCount: 1
 
   image:
     repository: cassandra
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: "4"
+
+  resource:
+    request:
+      memory: "8Gi"
+      cpu: "500m"
+
+    limit:
+      memory: "8Gi"
+      cpu: "500m" 
 
   service:
     type: ClusterIP
@@ -68,18 +101,83 @@ cassandra:
     storageClassName: cephfs
     accessModes: ReadWriteOnce
     capacity:
-      storage: 10Gi
+      storage: 5Gi
+
+cdn:
+  address : "cdn.rpa-hercules.svc.cluster.local"
+  ingress_address : "cdn.rpa.hercules.com"
+  replicaCount: 1
+
+  image:
+    repository: php
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "7.2-apache"
+
+  resource:
+    request:
+      memory: "512Mi"
+      cpu: "500m"
+
+    limit:
+      memory: "512Mi"
+      cpu: "500m" 
+
+  service:
+    type: ClusterIP
+    tcp:
+      port: 80
+
+  volumeClaim:
+    storageClassName: cephfs
+    accessModes: ReadWriteOnce
+    capacity:
+      storage: 5Gi
 
     
 backend:
-
+  address: "app.rpa-hercules.svc.cluster.local"
+  ingress_address: "api.rpa.hercules.com"
+  ingress_port: 80
   image:
     repository: python
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: "3.8-bullseye"
 
+  resource:
+    request:
+      memory: "1Gi"
+      cpu: "500m"
+
+    limit:
+      memory: "1Gi"
+      cpu: "500m" 
+
   service:
-    type: LoadBalancer
+    type: ClusterIP
     flask:
       port: 5000
+
+
+frontend:
+  ingress_address: "rpa.hercules.com"
+  image:
+    repository: node
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "16-alpine"
+
+  resource:
+    request:
+      memory: "2Gi"
+      cpu: "500m"
+
+    limit:
+      memory: "2Gi"
+      cpu: "500m" 
+
+  service:
+    type: ClusterIP
+    http:
+      port: 8080

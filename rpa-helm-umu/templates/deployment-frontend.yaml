@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-rpa
+  labels:
+    app: dashboard-rpa
+spec:
+  selector:
+    matchLabels:
+      app: dashboard-rpa
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dashboard-rpa
+    spec:
+      containers:
+        - name: dashboard-rpa
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullpolicy }}
+          resources:
+            requests:
+              memory: {{ .Values.frontend.resource.request.memory }}
+              cpu: "{{ .Values.frontend.resource.request.cpu }}"
+            limits:
+              memory: {{ .Values.frontend.resource.limit.memory }}
+              cpu: "{{ .Values.frontend.resource.limit.cpu }}"
+          env:
+          - name: GITHUB_DASHBOARD
+            value: "https://github.com/hercules-rpa/dashboard/archive/refs/heads/main.zip"
+          command: ["/bin/sh"]
+          args: 
+            - -c
+            - |
+              cd /opt
+              apk update && apk add wget && apk add unzip
+              wget -4 $(GITHUB_DASHBOARD) && ls && unzip main.zip && ls && rm -rf main.zip && cd dashboard-main/
+              sed -i 's@export const API_URL = .*@export const API_URL = '\''http://{{ .Values.backend.ingress_address }}:{{ .Values.backend.ingress_port }}/api/orchestrator'\''@' ./src/common/config.js
+              sed -i 's/'\''no-console'\'':.*/'\''no-console'\'':'\''off'\','/' .eslintrc.js 
+              npm install --legacy-peer-deps && npm run build
+              npm install -g serve && serve -s dist -l 8080
+              
+          ports:
+            - name: frontend
+              containerPort: {{ .Values.frontend.service.http.port }}

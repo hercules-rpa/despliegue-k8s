@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cdn-rpa
+  labels:
+    app: cdn-rpa
+spec:
+  selector:
+    matchLabels:
+      app: cdn-rpa
+  serviceName: "cdn-rpa"
+  replicas: {{ .Values.cdn.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: cdn-rpa
+    spec:
+      volumes:
+        - name: config-virtualhost
+          configMap:
+            name: cdn-config
+            items:
+            - key: cdn-hercules-rpa.um.es.conf
+              path: cdn-hercules-rpa.um.es.conf
+        - name: config-php
+          configMap:
+            name: cdn-config
+            items:
+            - key: upload.php
+              path: upload.php
+        - name: config-pv
+          persistentVolumeClaim:
+            claimName: cdn-pv-claim    
+      containers:
+        - name: cdn-rpa
+          image: "{{ .Values.cdn.image.repository }}:{{ .Values.cdn.image.tag | default .Chart.AppVersion }}"
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/bash", "-c", "ln -s /etc/apache2/sites-available/cdn-hercules-rpa.um.es.conf /etc/apache2/sites-enabled/ && a2dissite 000-default.conf && service apache2 reload && chmod 777 /var/www/cdn"]
+          resources:
+            requests:
+              memory: {{ .Values.cdn.resource.request.memory }}
+              cpu: "{{ .Values.cdn.resource.request.cpu }}"
+            limits:
+              memory: {{ .Values.cdn.resource.limit.memory }}
+              cpu: "{{ .Values.cdn.resource.limit.cpu }}"
+          imagePullPolicy: {{ .Values.cdn.image.pullpolicy }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - ls /var/www
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 45
+            timeoutSeconds: 2
+          ports:
+            - containerPort: {{ .Values.cdn.service.tcp.port }}
+              name: cdn
+              protocol: TCP
+
+          volumeMounts:
+          - name: config-php
+            mountPath: /var/www/cdn/upload.php
+            subPath: upload.php
+          - name: config-virtualhost
+            mountPath: /etc/apache2/sites-available/cdn-hercules-rpa.um.es.conf
+            subPath: cdn-hercules-rpa.um.es.conf
+          - name: config-pv
+            mountPath: /var/www

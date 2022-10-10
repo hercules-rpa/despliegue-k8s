@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-wildcard-host
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: "{{ .Values.frontend.ingress_address }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: frontend
+            port:
+              number: {{ .Values.frontend.service.http.port }}
+  - host: "{{ .Values.backend.ingress_address }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: app
+            port:
+              number: {{ .Values.backend.service.flask.port }}
+  - host: "{{ .Values.cdn.ingress_address }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: cdn
+            port:
+              number: {{ .Values.cdn.service.tcp.port }}
+  - host: "{{ .Values.rabbitmq.ingress_address_managment }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: rabbitmq
+            port:
+              number: {{ .Values.rabbitmq.service.http.port }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}

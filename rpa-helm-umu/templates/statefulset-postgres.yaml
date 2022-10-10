@@ -1,3 +1,4 @@
+{{- if .Values.postgres.install }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -18,16 +19,47 @@ spec:
       containers:
         - name: postgres-rpa
           image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag | default .Chart.AppVersion }}"
+          resources:
+            requests:
+              memory: {{ .Values.postgres.resource.request.memory }}
+              cpu: "{{ .Values.postgres.resource.request.cpu }}"
+            limits:
+              memory: {{ .Values.postgres.resource.limit.memory }}
+              cpu: "{{ .Values.postgres.resource.limit.cpu }}"
           imagePullPolicy: {{ .Values.postgres.image.pullpolicy }}
           env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: username_postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-rpa
+                  key: password_postgres
             - name: POSTGRES_DB
               value: postgres
-            - name: POSTGRES_USER
-              value: {{ .Values.postgres.user }}
-            - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgres.password }}
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - PGPASSWORD= $(POSTGRES_PASSWORD)
+                - psql -h localhost -U $(POSTGRES_USER)
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - PGPASSWORD= $(POSTGRES_PASSWORD)
+                - psql -h localhost -U $(POSTGRES_USER)
+            initialDelaySeconds: 45
+            timeoutSeconds: 2
           ports:
             - containerPort: {{ .Values.postgres.service.tcp.port }}
               name: postgres
@@ -39,3 +71,4 @@ spec:
         - name: config-pv
           persistentVolumeClaim:
             claimName: postgres-pv-claim
+{{ end }}
