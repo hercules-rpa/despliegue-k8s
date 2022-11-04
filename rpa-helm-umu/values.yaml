@@ -3,11 +3,13 @@
 # Declare variables to be passed into your templates.
 
 secret:
-  secretName: secret-rpa
-  usernameRabbitKey: username-rabbit
-  passwordRabbitKey: password-rabbit
+  secretNamePostgres: secret-rpa
   usernamePostgresKey: username-postgres
   passwordPostgresKey: password-postgres
+  secretNameRabbit: secret-rabbitmq
+  usernameRabbitKey: username-rabbit
+  passwordRabbitKey: password-rabbit
+  secretNameCassandra: secret-cassandra
   usernameCassandraKey: username-cassandra
   passwordCassandraKey: password-cassandra
   
@@ -21,9 +23,9 @@ rabbitmq:
 
   secret:
     secretName: secret-rabbitmq
-    definitionFile: definitions.json
-    configurationFile: rabbitmq.conf
-    plugins: enabled_plugins
+    # definitionFile: definitions.json
+    # configurationFile: rabbitmq.conf
+    # plugins: enabled_plugins
 
   image:
     repository: rabbitmq
@@ -168,14 +170,9 @@ backend:
       cpu: "750m" 
 
   service:  
-      typeFlask: ClusterIP
-      typeFtp: NodePort
+      type: ClusterIP
       flask:
         port: 5000
-      ftp:
-        port: 21
-
-
 
 frontend:
   ingress_address: "rpa-desa.um.es"

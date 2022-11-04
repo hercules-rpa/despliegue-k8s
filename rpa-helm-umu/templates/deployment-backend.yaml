@@ -21,22 +21,22 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNamePostgres }}
                   key: {{ .Values.secret.usernamePostgresKey }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNamePostgres }}
                   key: {{ .Values.secret.passwordPostgresKey }}
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.passwordCassandraKey }}
           command: ["/bin/bash"]
           args:
@@ -71,22 +71,22 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNamePostgres }}
                   key: {{ .Values.secret.usernamePostgresKey }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNamePostgres }}
                   key: {{ .Values.secret.passwordPostgresKey }}
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.passwordCassandraKey }}
             - name: GITHUB_ORCHESTRATOR
               value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
@@ -115,13 +115,10 @@ spec:
               PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/insertSettings.sql
               cqlsh {{ .Values.cassandra.address }} -u $(CASSANDRA_CLUSTER_NAME) -p $(CASSANDRA_PASSWORD) -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
               pip3 install -r requirements.txt
-              python LaunchFTP.py orchestratorK8s.json &
               cat rpa_orchestrator/config/orchestratorK8s.json && python LaunchOrchestrator.py orchestratorK8s.json
           ports:
             - name: flask
               containerPort: {{ .Values.backend.service.flask.port }}
-            - name: ftp
-              containerPort: {{ .Values.backend.service.ftp.port }}
           imagePullPolicy: {{ .Values.backend.image.pullpolicy }}
       volumes:
         - name: config-json-volume

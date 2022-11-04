@@ -32,16 +32,16 @@ spec:
           limits:
             memory: {{ .Values.rabbitmq.resource.limit.memory }}
             cpu: "{{ .Values.rabbitmq.resource.limit.cpu }}"
-        volumeMounts:
-          - name: definitions
-            mountPath: /etc/rabbitmq/definitions.json
-            subPath: definitions.json
-          - name: rabbitmq
-            mountPath: /etc/rabbitmq/rabbitmq.conf
-            subPath: rabbitmq.conf
-          - name: enabled-plugins
-            mountPath: /etc/rabbitmq/enabled_plugins
-            subPath: enabled_plugins
+        # volumeMounts:
+        #   - name: definitions
+        #     mountPath: /etc/rabbitmq/definitions.json
+        #     subPath: definitions.json
+        #   - name: rabbitmq
+        #     mountPath: /etc/rabbitmq/rabbitmq.conf
+        #     subPath: rabbitmq.conf
+        #   - name: enabled-plugins
+        #     mountPath: /etc/rabbitmq/enabled_plugins
+        #     subPath: enabled_plugins
 
         # Learn more about what ports various protocols use
         # at https://www.rabbitmq.com/networking.html#ports
@@ -70,6 +70,16 @@ spec:
           timeoutSeconds: 10
         imagePullPolicy: {{ .Values.rabbitmq.image.pullpolicy }}
         env:
+          - name: RABBITMQ_DEFAULT_PASS
+            valueFrom:
+              secretKeyRef:
+                name: secret-rabbitmq
+                key: password-rabbit
+          - name: RABBITMQ_DEFAULT_USER
+            valueFrom:
+              secretKeyRef:
+                name: secret-rabbitmq
+                key: username-rabbit
           - name: RABBITMQ-HERCULES
             valueFrom:
               fieldRef:
@@ -88,22 +98,22 @@ spec:
             value: rabbit@$(RABBITMQ-HERCULES).$(K8S_SERVICE_NAME).$(NAMESPACE-HERCULES-RPA).svc.cluster.local
           - name: K8S_HOSTNAME_SUFFIX
             value: {{ .Values.rabbitmq.address }}
-      volumes:
-        - name: definitions
-          secret:
-            secretName: {{ .Values.rabbitmq.secret.secretName }}
-            items:
-            - key: {{ .Values.rabbitmq.secret.definitionFile }}
-              path: {{ .Values.rabbitmq.secret.definitionFile }}
-        - name: rabbitmq
-          secret:
-            secretName: {{ .Values.rabbitmq.secret.secretName }}
-            items:
-            - key: {{ .Values.rabbitmq.secret.configurationFile }}
-              path: {{ .Values.rabbitmq.secret.configurationFile }}
-        - name: enabled-plugins
-          secret:
-            secretName: {{ .Values.rabbitmq.secret.secretName }}
-            items:
-            - key: {{ .Values.rabbitmq.secret.plugins }}
-              path: {{ .Values.rabbitmq.secret.plugins }}
+      # volumes:
+      #   - name: definitions
+      #     secret:
+      #       secretName: {{ .Values.rabbitmq.secret.secretName }}
+      #       items:
+      #       - key: {{ .Values.rabbitmq.secret.definitionFile }}
+      #         path: {{ .Values.rabbitmq.secret.definitionFile }}
+      #   - name: rabbitmq
+      #     secret:
+      #       secretName: {{ .Values.rabbitmq.secret.secretName }}
+      #       items:
+      #       - key: {{ .Values.rabbitmq.secret.configurationFile }}
+      #         path: {{ .Values.rabbitmq.secret.configurationFile }}
+      #   - name: enabled-plugins
+      #     secret:
+      #       secretName: {{ .Values.rabbitmq.secret.secretName }}
+      #       items:
+      #       - key: {{ .Values.rabbitmq.secret.plugins }}
+      #         path: {{ .Values.rabbitmq.secret.plugins }}

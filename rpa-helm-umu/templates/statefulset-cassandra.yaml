@@ -36,12 +36,12 @@ spec:
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secret.secretName }}
+                  name: {{ .Values.secret.secretNameCassandra }}
                   key: {{ .Values.secret.passwordCassandraKey }}
             - name: MAX_HEAP_SIZE
               value: 512M
