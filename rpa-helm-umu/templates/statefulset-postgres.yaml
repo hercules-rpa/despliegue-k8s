@@ -31,15 +31,15 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernamePostgresKey }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordPostgresKey }}
             - name: POSTGRES_DB
-              value: postgres
+              value: $(POSTGRES_USER)
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           readinessProbe:

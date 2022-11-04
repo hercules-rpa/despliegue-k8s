@@ -15,6 +15,8 @@ spec:
       labels:
         app: cassandra-rpa
     spec:
+      hostname: cassandra
+      subdomain: rpa
       volumes:
         - name: config-pv
           persistentVolumeClaim:
@@ -25,22 +27,26 @@ spec:
           resources:
             requests:
               memory: {{ .Values.cassandra.resource.request.memory }}
-              cpu: "{{ .Values.cassandra.resource.request.cpu }}"
+              cpu: {{ .Values.cassandra.resource.request.cpu }}
             limits:
               memory: {{ .Values.cassandra.resource.limit.memory }}
-              cpu: "{{ .Values.cassandra.resource.limit.cpu }}"
+              cpu: {{ .Values.cassandra.resource.limit.cpu }}
           imagePullPolicy: {{ .Values.cassandra.image.pullpolicy }}
           env:
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordCassandraKey }}
+            - name: MAX_HEAP_SIZE
+              value: 512M
+            - name: HEAP_NEWSIZE
+              value: 100M
           readinessProbe:
             exec:
               command:

@@ -21,23 +21,23 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernamePostgresKey }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordPostgresKey }}
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordCassandraKey }}
           command: ["/bin/bash"]
           args:
           - -c
@@ -61,33 +61,38 @@ spec:
               memory: {{ .Values.backend.resource.limit.memory }}
               cpu: "{{ .Values.backend.resource.limit.cpu }}"
           volumeMounts:
-            - name: config-volume
+            - name: config-json-volume
               mountPath: /opt/orchestratorK8s.json
               subPath: orchestratorK8s.json
-              
+            - name: config-sql-volume
+              mountPath: /opt/insertSettings.sql
+              subPath: insertSettings.sql
           env:
-            - name: GITHUB_ORCHESTRATOR
-              value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernamePostgresKey }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_postgres
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordPostgresKey }}
             - name: CASSANDRA_CLUSTER_NAME
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: username_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.usernameCassandraKey }}
             - name: CASSANDRA_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: secret-rpa
-                  key: password_cassandra
+                  name: {{ .Values.secret.secretName }}
+                  key: {{ .Values.secret.passwordCassandraKey }}
+            - name: GITHUB_ORCHESTRATOR
+              value: "https://github.com/hercules-rpa/orquestador/archive/refs/heads/main.zip"
+            - name: GITHUB_MODULE_COGNITIVE
+              value: "https://github.com/hercules-rpa/module_cognitive_lib/archive/refs/heads/main.zip"
+
           command: ["/bin/bash"]
           args: 
             - -c
@@ -96,25 +101,38 @@ spec:
               pwd
               ls -al
               cat orchestratorK8s.json
+              cat insertSetting.sql
               apt-get update -y
               apt-get install apt-transport-https ca-certificates wget dirmngr gnupg software-properties-common -y
               apt-get install postgresql-client -y
               pip3 install -U cqlsh
-              wget $(GITHUB_ORCHESTRATOR) && unzip main.zip && ls && rm -rf main.zip && cp orchestratorK8s.json orquestador-main/rpa_orchestrator/config &&  cd orquestador-main/
+              wget $(GITHUB_MODULE_COGNITIVE) && unzip main.zip && rm -rf main.zip && pip install module_cognitive_lib-main/dist/module_cognitive_treelogic-0.1.0-py3-none-any.whl
+              wget $(GITHUB_ORCHESTRATOR) && unzip main.zip && ls && rm -rf main.zip && cp orchestratorK8s.json orquestador-main/rpa_orchestrator/config 
+              cp insertSettings.sql orquestador-main/rpa_orchestrator/config/bbdd/persistence/ && cd orquestador-main/
               PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/databaseAndTables.sql
               PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/inserts.sql
               PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/processDatabase.sql
+              PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/insertSettings.sql
               cqlsh {{ .Values.cassandra.address }} -u $(CASSANDRA_CLUSTER_NAME) -p $(CASSANDRA_PASSWORD) -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
               pip3 install -r requirements.txt
+              python LaunchFTP.py orchestratorK8s.json &
               cat rpa_orchestrator/config/orchestratorK8s.json && python LaunchOrchestrator.py orchestratorK8s.json
           ports:
             - name: flask
               containerPort: {{ .Values.backend.service.flask.port }}
+            - name: ftp
+              containerPort: {{ .Values.backend.service.ftp.port }}
           imagePullPolicy: {{ .Values.backend.image.pullpolicy }}
       volumes:
-        - name: config-volume
+        - name: config-json-volume
           secret:
-            secretName: secret-backend
+            secretName: {{ .Values.backend.secret.secretName }}
             items: 
-            - key: orchestratorK8s.json
-              path: orchestratorK8s.json
+            - key: {{ .Values.backend.secret.fileJsonConfig }}
+              path: {{ .Values.backend.secret.fileJsonConfig }}
+        - name: config-sql-volume
+          secret:
+            secretName: {{ .Values.backend.secret.secretName }}
+            items: 
+            - key: {{ .Values.backend.secret.fileSqlConfig }}
+              path: {{ .Values.backend.secret.fileSqlConfig }}

@@ -91,19 +91,19 @@ spec:
       volumes:
         - name: definitions
           secret:
-            secretName: secret-rabbitmq
+            secretName: {{ .Values.rabbitmq.secret.secretName }}
             items:
-            - key: definitions.json
-              path: definitions.json
+            - key: {{ .Values.rabbitmq.secret.definitionFile }}
+              path: {{ .Values.rabbitmq.secret.definitionFile }}
         - name: rabbitmq
           secret:
-            secretName: secret-rabbitmq
+            secretName: {{ .Values.rabbitmq.secret.secretName }}
             items:
-            - key: rabbitmq.conf
-              path: rabbitmq.conf
+            - key: {{ .Values.rabbitmq.secret.configurationFile }}
+              path: {{ .Values.rabbitmq.secret.configurationFile }}
         - name: enabled-plugins
           secret:
-            secretName: secret-rabbitmq
+            secretName: {{ .Values.rabbitmq.secret.secretName }}
             items:
-            - key: enabled_plugins
-              path: enabled_plugins
+            - key: {{ .Values.rabbitmq.secret.plugins }}
+              path: {{ .Values.rabbitmq.secret.plugins }}

@@ -1,18 +1,29 @@
 # Default values for rpa-plataform.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+secret:
+  secretName: secret-rpa
+  usernameRabbitKey: username-rabbit
+  passwordRabbitKey: password-rabbit
+  usernamePostgresKey: username-postgres
+  passwordPostgresKey: password-postgres
+  usernameCassandraKey: username-cassandra
+  passwordCassandraKey: password-cassandra
+  
 ingress:
   ingressClassName: "nginx"
-rabbitmq:
-  user: "YWRtaW4="
-  password: "SDNyY3VsM3NSUEE="
-  address : "rabbitmq.rpa-hercules.svc.cluster.local"
-  ingress_address: "rabbitmq.rpa.hercules.com"
-  ingress_address_managment: "rabbitmq.managment.rpa.hercules.com"
-  enabled_plugins: "[rabbitmq_management, rabbitmq_prometheus]."
 
+rabbitmq:
+  address : "rabbitmq.rpa-hercules.svc.cluster.local"
 
   replicaCount: 1
+
+  secret:
+    secretName: secret-rabbitmq
+    definitionFile: definitions.json
+    configurationFile: rabbitmq.conf
+    plugins: enabled_plugins
 
   image:
     repository: rabbitmq
@@ -22,14 +33,14 @@ rabbitmq:
 
   resource:
     request:
-      memory: "2Gi"
-      cpu: "500m"
+      memory: "500Mi"
+      cpu: "256m"
     limit:
       memory: "2Gi"
-      cpu: "500m" 
+      cpu: "500m"
 
   service:
-    type: LoadBalancer
+    type: NodePort
     http:
       port: 15672
     amqp:
@@ -38,8 +49,6 @@ rabbitmq:
       port: 25672
     
 postgres:
-  user: "cG9zdGdyZXM="
-  password: "SDNyY3VsM3NSUEE="
   install: true
   address: "postgres.rpa-hercules.svc.cluster.local"
   
@@ -54,7 +63,7 @@ postgres:
   resource:
     request:
       memory: "1Gi"
-      cpu: "500m"
+      cpu: "250m"
 
     limit:
       memory: "1Gi"
@@ -72,8 +81,6 @@ postgres:
       storage: 5Gi
     
 cassandra:
-  user: "Y2Fzc2FuZHJh"
-  password: "SDNyY3VsM3NSUEE="
   address : "cassandra.rpa-hercules.svc.cluster.local"
   replicaCount: 1
 
@@ -81,15 +88,15 @@ cassandra:
     repository: cassandra
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "4"
+    tag: "3"
 
   resource:
     request:
-      memory: "8Gi"
+      memory: "1Gi"
       cpu: "500m"
 
     limit:
-      memory: "8Gi"
+      memory: "2Gi"
       cpu: "500m" 
 
   service:
@@ -105,7 +112,7 @@ cassandra:
 
 cdn:
   address : "cdn.rpa-hercules.svc.cluster.local"
-  ingress_address : "cdn.rpa.hercules.com"
+  ingress_address : "rpa-cdn-desa.um.es"
   replicaCount: 1
 
   image:
@@ -116,8 +123,8 @@ cdn:
 
   resource:
     request:
-      memory: "512Mi"
-      cpu: "500m"
+      memory: "128Mi"
+      cpu: "254m"
 
     limit:
       memory: "512Mi"
@@ -137,8 +144,14 @@ cdn:
     
 backend:
   address: "app.rpa-hercules.svc.cluster.local"
-  ingress_address: "api.rpa.hercules.com"
+  ingress_address: "rpa-api-desa.um.es"
   ingress_port: 80
+  
+  secret:
+    secretName: secret-backend
+    fileJsonConfig: orchestratorK8s.json
+    fileSqlConfig: insertSettings.sql
+
   image:
     repository: python
     pullPolicy: IfNotPresent
@@ -152,16 +165,20 @@ backend:
 
     limit:
       memory: "1Gi"
-      cpu: "500m" 
+      cpu: "750m" 
 
-  service:
-    type: ClusterIP
-    flask:
-      port: 5000
+  service:  
+      typeFlask: ClusterIP
+      typeFtp: NodePort
+      flask:
+        port: 5000
+      ftp:
+        port: 21
+
 
 
 frontend:
-  ingress_address: "rpa.hercules.com"
+  ingress_address: "rpa-desa.um.es"
   image:
     repository: node
     pullPolicy: IfNotPresent
@@ -170,12 +187,12 @@ frontend:
 
   resource:
     request:
-      memory: "2Gi"
-      cpu: "500m"
+      memory: "1Gi"
+      cpu: "250m"
 
     limit:
       memory: "2Gi"
-      cpu: "500m" 
+      cpu: "750m" 
 
   service:
     type: ClusterIP

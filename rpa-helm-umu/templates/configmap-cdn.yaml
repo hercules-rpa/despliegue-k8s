@@ -19,7 +19,7 @@ data:
 
   upload.php: |   
     <?php
-    $localIP = getHostByName(getHostName());
+    $localIP = '{{ .Values.cdn.ingress_address }}';
     // Displaying the address 
     
     define("CDN_HOST",     "http://" . $localIP . "/");

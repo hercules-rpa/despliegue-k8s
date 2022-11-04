@@ -1,4 +1,10 @@
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
 kind: Ingress
 metadata:
   name: ingress-wildcard-host
@@ -9,41 +15,52 @@ spec:
   - host: "{{ .Values.frontend.ingress_address }}"
     http:
       paths:
+      {{- if semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion }}
       - pathType: Prefix
+      {{- end }}
         path: "/"
         backend:
+          {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
           service:
             name: frontend
             port:
               number: {{ .Values.frontend.service.http.port }}
+          {{- else }}
+          serviceName: frontend
+          servicePort: {{ .Values.frontend.service.http.port  }}
+          {{- end }}
   - host: "{{ .Values.backend.ingress_address }}"
     http:
       paths:
+      {{- if semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion }}
       - pathType: Prefix
+      {{- end }}
         path: "/"
         backend:
+          {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
           service:
             name: app
             port:
               number: {{ .Values.backend.service.flask.port }}
+          {{- else }}
+          serviceName: app
+          servicePort: {{ .Values.backend.service.flask.port  }}
+          {{- end }}
   - host: "{{ .Values.cdn.ingress_address }}"
     http:
       paths:
+      {{- if semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion }}
       - pathType: Prefix
+      {{- end }}
         path: "/"
         backend:
+          {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
           service:
             name: cdn
             port:
               number: {{ .Values.cdn.service.tcp.port }}
-  - host: "{{ .Values.rabbitmq.ingress_address_managment }}"
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: rabbitmq
-            port:
-              number: {{ .Values.rabbitmq.service.http.port }}
+          {{- else }}
+          serviceName: cdn
+          servicePort: {{ .Values.cdn.service.tcp.port  }}
+          {{- end }}
   ingressClassName: {{ .Values.ingress.ingressClassName }}

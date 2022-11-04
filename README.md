@@ -39,3 +39,11 @@ Un ejemplo de instalación modificando los storageClass e indicando que se desea
 ```
 helm uninstall rpa -n rpa-hercules
 ```
+
+Si la base de datos se encontrase fuera del repositorio deberiamos de eliminarlas a mano.
+
+```
+DROP DATABASE RPA
+DROP DATABASE PROCESS
+```
+
