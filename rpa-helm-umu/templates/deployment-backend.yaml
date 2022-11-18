@@ -115,7 +115,7 @@ spec:
               PGPASSWORD=$(POSTGRES_PASSWORD) psql -h {{ .Values.postgres.address }} -U $(POSTGRES_USER) -f rpa_orchestrator/config/bbdd/persistence/insertSettings.sql
               cqlsh {{ .Values.cassandra.address }} -u $(CASSANDRA_CLUSTER_NAME) -p $(CASSANDRA_PASSWORD) -f rpa_orchestrator/config/bbdd/BI/GenerateKeyTable.cql
               pip3 install -r requirements.txt
-              cat rpa_orchestrator/config/orchestratorK8s.json && python LaunchOrchestrator.py orchestratorK8s.json
+              python LaunchOrchestrator.py orchestratorK8s.json
           ports:
             - name: flask
               containerPort: {{ .Values.backend.service.flask.port }}

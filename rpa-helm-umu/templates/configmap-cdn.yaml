@@ -31,7 +31,7 @@ data:
     $filename = $id . '.' . $ext;
     $url_cdn = 'http://' . $localIP . '/'.$filename;
 
-
+    $myObj = new \stdClass();
     $myObj->source = $_FILES['file']['name'];
     $myObj->extension = $ext;
     $myObj->name = $filename;
@@ -39,7 +39,7 @@ data:
     $myObj->size = $_FILES['file']['size'];
     $myObj->url_cdn = $url_cdn;
 
-
+    $req = new \stdClass();
     $req->name = $filename;
     $req->url_cdn = $url_cdn;
 
