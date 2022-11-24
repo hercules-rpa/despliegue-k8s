@@ -148,6 +148,7 @@ backend:
   address: "app.rpa-hercules.svc.cluster.local"
   ingress_address: "rpa-api-desa.um.es"
   ingress_port: 80
+  protocol: "https"
   
   secret:
     secretName: secret-backend

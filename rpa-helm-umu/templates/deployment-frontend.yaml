@@ -35,7 +35,7 @@ spec:
               cd /opt
               apk update && apk add wget && apk add unzip
               wget -4 $(GITHUB_DASHBOARD) && ls && unzip main.zip && ls && rm -rf main.zip && cd dashboard-main/
-              sed -i 's@export const API_URL = .*@export const API_URL = '\''https://{{ .Values.backend.ingress_address }}:{{ .Values.backend.ingress_port }}/api/orchestrator'\''@' ./src/common/config.js
+              sed -i 's@export const API_URL = .*@export const API_URL = '\''{{ .Values.backend.protocol }}://{{ .Values.backend.ingress_address }}/api/orchestrator'\''@' ./src/common/config.js
               sed -i 's/'\''no-console'\'':.*/'\''no-console'\'':'\''off'\','/' .eslintrc.js 
               npm install --legacy-peer-deps && npm run build
               npm install -g serve && serve -s dist -l 8080
