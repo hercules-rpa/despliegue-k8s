@@ -22,14 +22,14 @@ data:
     $localIP = '{{ .Values.cdn.ingress_address }}';
     // Displaying the address 
     
-    define("CDN_HOST",     "http://" . $localIP . "/");
+    define("CDN_HOST",     "{{ .Values.cdn.protocol }}://" . $localIP . "/");
     $id = uniqid();
     $target_path = "./";
     //$target_path = $target_path . basename( $_FILES['file']['name']);
     $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
     $target_path = $target_path . basename($id . '.' . $ext);
     $filename = $id . '.' . $ext;
-    $url_cdn = 'http://' . $localIP . '/'.$filename;
+    $url_cdn = '{{ .Values.cdn.protocol }}://' . $localIP . '/'.$filename;
 
     $myObj = new \stdClass();
     $myObj->source = $_FILES['file']['name'];
@@ -62,10 +62,6 @@ data:
 
 
     function notifyNewFile($filename,$url_cdn){
-          // Your ID and token
-          //$blogID = '8070105920543249955';
-          //$authToken = 'OAuth 2.0 token here';
-
           // The data to send to the API
           $postData = array(
                   'name' => $filename,
@@ -99,6 +95,5 @@ data:
           curl_close($ch);
 
           // Print the date from the response
-          //echo $responseData['published'];
           return $responseData;
     }

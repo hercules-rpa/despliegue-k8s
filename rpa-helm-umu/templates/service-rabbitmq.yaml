@@ -8,13 +8,16 @@ spec:
   type: {{ .Values.rabbitmq.service.type }}
   ports:
    - name: http
-     protocol: TCP
      port: {{ .Values.rabbitmq.service.http.port }}
+     {{ if ((.Values.rabbitmq.service.http).nodeport) }}
+     nodePort:  {{ .Values.rabbitmq.service.http.nodeport }}{{ end }}
    - name: amqp
-     protocol: TCP
      port: {{ .Values.rabbitmq.service.amqp.port }}
+     {{ if ((.Values.rabbitmq.service.amqp).nodeport) }}
+     nodePort: {{ .Values.rabbitmq.service.amqp.nodeport }}{{ end }}
    - name: dist
-     protocol: TCP
      port: {{ .Values.rabbitmq.service.dist.port }}
+     {{ if ((.Values.rabbitmq.service.dist).nodeport) }}
+     nodePort: {{ .Values.rabbitmq.service.dist.nodeport }}{{ end }}
   selector:
     app: rabbitmq

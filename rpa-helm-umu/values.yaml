@@ -45,10 +45,14 @@ rabbitmq:
     type: NodePort
     http:
       port: 15672
+      nodeport: 30659
     amqp:
       port: 5672
+      nodeport: 30939
     dist:
       port: 25672
+      nodeport: 31042
+
     
 postgres:
   install: true
@@ -116,6 +120,7 @@ cdn:
   address : "cdn.rpa-hercules.svc.cluster.local"
   ingress_address : "rpa-cdn-desa.um.es"
   replicaCount: 1
+  protocol: "https"
 
   image:
     repository: php
