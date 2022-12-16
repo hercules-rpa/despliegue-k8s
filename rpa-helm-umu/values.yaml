@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 secret:
-  secretNamePostgres: secret-rpa
+  secretNamePostgres: secret-postgres
   usernamePostgresKey: username-postgres
   passwordPostgresKey: password-postgres
   secretNameRabbit: secret-rabbitmq
@@ -21,8 +21,6 @@ rabbitmq:
 
   replicaCount: 1
 
-  secret:
-    secretName: secret-rabbitmq
     # definitionFile: definitions.json
     # configurationFile: rabbitmq.conf
     # plugins: enabled_plugins
